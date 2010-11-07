@@ -17,6 +17,19 @@ class ActionMailer::Base
   def self.email_class
     @@email_class_name.constantize
   end
+  
+  ##
+  # Set the name of the yml config file for smtp.
+  #
+  @@smtp_settings_path_name = "#{Rails.root}/config/smtp_settings.yml"
+
+  def self.smtp_settings_path=(filename)
+    @@smtp_settings_path_name = filename
+  end
+
+  def self.smtp_settings_path
+    @@smtp_settings_path_name
+  end
 
   ##
   # Adds +mail+ to the Email table.  Only the first From address for +mail+ is

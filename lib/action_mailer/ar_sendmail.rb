@@ -370,7 +370,7 @@ class ActionMailer::ARSendmail
     else
       settings << smtp_settings[:tls]
     end
-
+    
     smtp.start(*settings) do |session|
       @failed_auth_count = 0
       until emails.empty? do
@@ -468,7 +468,8 @@ class ActionMailer::ARSendmail
   end
 
   ##
-  # Proxy to ActionMailer::Base::smtp_settings.  See
+  # Either settings loaded from smtp settings file or 
+  # proxy to ActionMailer::Base::smtp_settings. See
   # http://api.rubyonrails.org/classes/ActionMailer/Base.html
   # for instructions on how to configure ActionMailer's SMTP server.
   #
@@ -476,7 +477,16 @@ class ActionMailer::ARSendmail
   # backwards compatibility.
 
   def smtp_settings
-    ActionMailer::Base.smtp_settings rescue ActionMailer::Base.server_settings
+    @smtp_settings ||= begin
+      if File.exists?(ActionMailer::Base.smtp_settings_path)
+        config = YAML::load_file(ActionMailer::Base.smtp_settings_path)
+        config = (config.has_key?(Rails.env) ? config[Rails.env] : config).with_indifferent_access
+        config[:authentication] = config[:authentication].to_sym if config[:authentication]
+        config
+      else
+        ActionMailer::Base.smtp_settings rescue ActionMailer::Base.server_settings
+      end
+    end
   end
 
 end
